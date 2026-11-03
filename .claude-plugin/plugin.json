@@ -1,0 +1,1 @@
+{ "name": "usage-band", "version": "0.1.0", "description": "Band above the prompt showing context fill and 5h/7d rate-limit usage with reset times", "types": "./types/index.d.ts" }
