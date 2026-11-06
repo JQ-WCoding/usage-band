@@ -1,6 +1,6 @@
 # usage-band
 
-A Claude Code mod that draws a band above the prompt showing context fill and 5h/7d rate-limit usage, with a countdown and the local time each limit resets.
+A Claude Code mod that draws a band above (or below) the prompt showing context fill and 5h/7d rate-limit usage, with a countdown and the local time each limit resets.
 
 ```
 CTX ████░░░░░░ 42% 85k/200k   5H ████████░░ 85% ⏱ 9h20m · 23:20   7D █░░░░░░░░░ 12% ⏱ 3d19h · Sat 09:00
@@ -9,6 +9,17 @@ CTX ████░░░░░░ 42% 85k/200k   5H ████████░
 Reset times are shown in your computer's local time zone, or in `TZ` when that environment variable is set.
 
 Before the first response of a session (or right after `/compact`), the context bar stays empty as `CTX ░░░░░░░░░░ –% –/200k`.
+
+## Position
+
+The `position` option picks where the band is drawn:
+
+| Value | Where |
+| --- | --- |
+| `above` (default) | above the prompt input; collapse it with ctrl+x ctrl+a |
+| `below` | below the prompt input, as the last row under the mode line |
+
+Set it on the options screen at install, or later in `/config` under usage-band.
 
 ## Colors
 

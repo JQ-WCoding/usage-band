@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Color, EngineInterface, Register, SessionContextUsage, SessionRateLimit } from 'claude-code'
+import type { Color, EngineInterface, Register, RenderInput, SessionContextUsage, SessionRateLimit } from 'claude-code'
 
 import type { Usage } from '../types'
 
@@ -98,7 +98,7 @@ const refresh = async ($: EngineInterface) => {
   await update($, usage, () => toUsage(context, rateLimits))
 }
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
     if (e.isInteractive) $.clock.every(MINUTE, () => $.ui.invalidate('ui.render'))
@@ -123,34 +123,54 @@ export const register: Register = on => {
     return next(e)
   })
 
+  if (options.position === 'below') {
+    on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
+      const band = await drawBand($, e)
+      const hint = await next(e)
+      if (!band) return hint
+      const { Box } = $.ui.resolve(e)
+      return (
+        <Box flexDirection="column">
+          {band}
+          {hint}
+        </Box>
+      )
+    })
+    return
+  }
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
-    const u = await read($, usage)
-    const segs = u ? segments(u, await $.clock.now()) : []
-    if (segs.length === 0) return next(e)
-
-    const { Box, Text } = $.ui.resolve(e)
-    return (
-      <Box flexDirection="row" flexWrap="wrap" columnGap={3}>
-        {segs.map((s, i) => {
-          const { filled, empty } = bar(s.percent ?? 0)
-          const tone = s.percent === undefined ? 'inactive' : level(s.percent)
-          return (
-            <Box key={`${s.label}-${i}`} flexDirection="row" columnGap={1}>
-              <Text color={s.labelColor} weight="bold">{s.label}</Text>
-              <Box flexDirection="row">
-                <Text color={tone}>{'█'.repeat(filled)}</Text>
-                <Text color="inactive">{'░'.repeat(empty)}</Text>
-              </Box>
-              <Text color={tone} weight="bold">{`${s.percent ?? '–'}%`}</Text>
-              {s.detail ? <Text dimColor>{s.detail}</Text> : null}
-              {s.reset ? <Text color="claude">⏱</Text> : null}
-              {s.reset ? <Text color="text" weight="bold">{s.reset.countdown}</Text> : null}
-              {s.reset ? <Text color="subtle">{`· ${s.reset.at}`}</Text> : null}
-            </Box>
-          )
-        })}
-      </Box>
-    )
+    return (await drawBand($, e)) ?? next(e)
   })
+}
+
+const drawBand = async ($: EngineInterface, e: RenderInput) => {
+  const u = await read($, usage)
+  const segs = u ? segments(u, await $.clock.now()) : []
+  if (segs.length === 0) return undefined
+
+  const { Box, Text } = $.ui.resolve(e)
+  return (
+    <Box flexDirection="row" flexWrap="wrap" columnGap={3}>
+      {segs.map((s, i) => {
+        const { filled, empty } = bar(s.percent ?? 0)
+        const tone = s.percent === undefined ? 'inactive' : level(s.percent)
+        return (
+          <Box key={`${s.label}-${i}`} flexDirection="row" columnGap={1}>
+            <Text color={s.labelColor} weight="bold">{s.label}</Text>
+            <Box flexDirection="row">
+              <Text color={tone}>{'█'.repeat(filled)}</Text>
+              <Text color="inactive">{'░'.repeat(empty)}</Text>
+            </Box>
+            <Text color={tone} weight="bold">{`${s.percent ?? '–'}%`}</Text>
+            {s.detail ? <Text dimColor>{s.detail}</Text> : null}
+            {s.reset ? <Text color="claude">⏱</Text> : null}
+            {s.reset ? <Text color="text" weight="bold">{s.reset.countdown}</Text> : null}
+            {s.reset ? <Text color="subtle">{`· ${s.reset.at}`}</Text> : null}
+          </Box>
+        )
+      })}
+    </Box>
+  )
 }

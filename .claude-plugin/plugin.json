@@ -1,1 +1,16 @@
-{ "name": "usage-band", "version": "0.1.1", "description": "Band above the prompt showing context fill and 5h/7d rate-limit usage with reset times", "license": "MIT", "types": "./types/index.d.ts" }
+{
+  "name": "usage-band",
+  "version": "0.2.0",
+  "description": "Band above or below the prompt showing context fill and 5h/7d rate-limit usage with reset times",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "position": {
+      "type": "string",
+      "title": "Band position",
+      "description": "Draw the band above the prompt input or below it",
+      "default": "above",
+      "options": ["above", "below"]
+    }
+  }
+}
