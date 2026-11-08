@@ -60,7 +60,7 @@ From a shell:
 claude plugin install usage-band --marketplace JQ-WCoding/usage-band
 ```
 
-In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `JQ-WCoding/usage-band`, then Add plugin.
+The desktop app shares plugins with the CLI, so after installing from a terminal the band also shows in the desktop app (Code tab). To install from the desktop app instead, add the marketplace once with `claude plugin marketplace add JQ-WCoding/usage-band`, then click + next to the prompt box and choose Add plugins.
 
 ## License
 
