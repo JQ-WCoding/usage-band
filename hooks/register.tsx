@@ -13,6 +13,7 @@ const DAY = 24 * HOUR
 const LIMITS: Record<string, { label: string; color: Color }> = {
   five_hour: { label: '5H', color: 'permission' },
   seven_day: { label: '7D', color: 'merged' },
+  spend_limit: { label: 'SPEND', color: 'claude' },
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

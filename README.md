@@ -23,7 +23,7 @@ Set it on the options screen at install, or later in `/config` under usage-band.
 
 ## Colors
 
-The bar and percentage of each segment (CTX, 5H, 7D) change color with usage:
+The bar and percentage of each segment (CTX, 5H, 7D, SPEND) change color with usage:
 
 | Usage | Color |
 | --- | --- |
@@ -32,7 +32,9 @@ The bar and percentage of each segment (CTX, 5H, 7D) change color with usage:
 | 85% and above | red |
 | no data yet (`–%`) | gray |
 
-Labels keep a fixed color: `CTX` and `5H` blue, `7D` purple.
+Labels keep a fixed color: `CTX` and `5H` blue, `7D` purple, `SPEND` orange.
+
+`SPEND` appears when a Claude gateway reports a spend limit; its percentage can go past 100% once the limit is exceeded.
 
 ## Screenshots
 

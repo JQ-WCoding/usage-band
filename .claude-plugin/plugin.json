@@ -1,6 +1,6 @@
 {
   "name": "usage-band",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Band above or below the prompt showing context fill and 5h/7d rate-limit usage with reset times",
   "license": "MIT",
   "types": "./types/index.d.ts",
