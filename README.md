@@ -1,5 +1,7 @@
 # usage-band
 
+English | [한국어](README.ko.md)
+
 A Claude Code mod that draws a band above (or below) the prompt showing context fill and 5h/7d rate-limit usage, with a countdown and the local time each limit resets.
 
 ```
