@@ -12,6 +12,10 @@ Reset times are shown in your computer's local time zone, or in `TZ` when that e
 
 Before the first response of a session (or right after `/compact`), the context bar stays empty as `CTX ░░░░░░░░░░ –% –/200k`.
 
+## Compaction point
+
+`CTX` measures against the model's whole window, but auto-compaction runs earlier: the window it measures can be smaller than the model's, and a buffer at its end is kept free (the `Autocompact buffer` row in `/context`). So the bar can show plenty of room while compaction is close. When 20% or less of the compaction threshold is left, `→compact N%` appears after the context figures, as in `CTX ████████░░ 78% 156k/200k →compact 4%`: yellow, and red at 10% or less. It stays hidden otherwise, when auto-compaction is off, and before the first response.
+
 ## Position
 
 The `position` option picks where the band is drawn:

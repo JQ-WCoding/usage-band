@@ -24,6 +24,7 @@ export type Segment = {
   labelColor: Color
   percent?: number
   detail?: string
+  compactLeft?: number
   reset?: { countdown: string; at: string }
 }
 
@@ -58,14 +59,30 @@ export const bar = (percent: number) => {
   return { filled, empty: BAR_CELLS - filled }
 }
 
+// The readout shows only once compaction is this close (percent of the threshold left).
+const COMPACT_SHOW_AT = 20
+
+export const compactTone = (left: number): Color => (left <= 10 ? 'error' : 'warning')
+
 export const level = (percent: number): Color => (percent >= 85 ? 'error' : percent >= 50 ? 'warning' : 'success')
 
-export const toUsage = (context: SessionContextUsage, rateLimits: SessionRateLimit[]): Usage => ({
+export const toUsage = (
+  context: SessionContextUsage,
+  rateLimits: SessionRateLimit[],
+  compactAt?: number | null,
+): Usage => ({
   tokens: context.tokens,
   window: context.window,
   percent: context.percent,
+  compactAt,
   limits: rateLimits.map(r => ({ kind: r.kind, percentUsed: r.percentUsed, resetsAt: r.resetsAt })),
 })
+
+const compactLeftOf = (u: Usage) => {
+  if (!u.compactAt || u.tokens === undefined) return undefined
+  const left = Math.max(0, Math.round(((u.compactAt - u.tokens) / u.compactAt) * 100))
+  return left <= COMPACT_SHOW_AT ? left : undefined
+}
 
 export const segments = (u: Usage, now: number): Segment[] => {
   const out: Segment[] = []
@@ -75,6 +92,7 @@ export const segments = (u: Usage, now: number): Segment[] => {
       labelColor: 'suggestion',
       percent: u.percent === undefined ? undefined : Math.round(u.percent),
       detail: `${u.tokens === undefined ? '–' : fmtTokens(u.tokens)}/${fmtTokens(u.window)}`,
+      compactLeft: compactLeftOf(u),
     })
   }
   for (const r of u.limits) {
@@ -94,9 +112,26 @@ export const segments = (u: Usage, now: number): Segment[] => {
   return out
 }
 
+// undefined: unknown (no breakdown yet, or the call failed); null: auto-compaction is off.
+const compactAtOf = (context: SessionContextUsage): number | null | undefined => {
+  const b = context.breakdown
+  if (!b) return undefined
+  return b.isAutoCompactEnabled && b.autoCompactThreshold ? b.autoCompactThreshold : null
+}
+
+// 'summary' estimates locally and sends no requests.
+const fetchCompactAt = async ($: EngineInterface) => {
+  try {
+    return compactAtOf((await $.session.usage({ breakdown: 'summary' })).context)
+  } catch {
+    return undefined
+  }
+}
+
 const refresh = async ($: EngineInterface) => {
   const { context, rateLimits } = await $.session.usage()
-  await update($, usage, () => toUsage(context, rateLimits))
+  const compactAt = await fetchCompactAt($)
+  await update($, usage, prev => toUsage(context, rateLimits, compactAt !== undefined ? compactAt : prev?.compactAt))
 }
 
 export const register: Register = (on, options) => {
@@ -120,7 +155,11 @@ export const register: Register = (on, options) => {
   })
 
   on('session.measure', async ($, e, next) => {
-    await update($, usage, () => toUsage(e.context, e.rateLimits))
+    const known = (await read($, usage))?.compactAt
+    const compactAt = known !== undefined ? known : await fetchCompactAt($)
+    await update($, usage, prev =>
+      toUsage(e.context, e.rateLimits, compactAt !== undefined ? compactAt : prev?.compactAt),
+    )
     return next(e)
   })
 
@@ -166,6 +205,9 @@ const drawBand = async ($: EngineInterface, e: RenderInput) => {
             </Box>
             <Text color={tone} weight="bold">{`${s.percent ?? '–'}%`}</Text>
             {s.detail ? <Text dimColor>{s.detail}</Text> : null}
+            {s.compactLeft !== undefined ? (
+              <Text color={compactTone(s.compactLeft)}>{`→compact ${s.compactLeft}%`}</Text>
+            ) : null}
             {s.reset ? <Text color="claude">⏱</Text> : null}
             {s.reset ? <Text color="text" weight="bold">{s.reset.countdown}</Text> : null}
             {s.reset ? <Text color="subtle">{`· ${s.reset.at}`}</Text> : null}
